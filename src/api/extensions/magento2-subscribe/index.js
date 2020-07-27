@@ -27,9 +27,9 @@ module.exports = ({ config }) => {
     }, (error, response, body) => {
       if (error || response.statusCode !== 200) {
         console.error(error, body)
-        apiStatus(res, 'An error occured while accessing Magento 2', 500)
+        apiStatus(res, '', response.statusCode)
       } else {
-        apiStatus(res, body.status, 200)
+        apiStatus(res, 'subscribed', 200)
       }
     })
   })
@@ -50,7 +50,7 @@ module.exports = ({ config }) => {
     }, function (error, response, body) {
       if (error || response.statusCode !== 200) {
         console.error(error)
-        apiStatus(res, 'An error occured while accessing Magento 2', 500)
+        apiStatus(res, 'Error on Magento 2: POST subscriber', response.statusCode)
       } else {
         apiStatus(res, body.status, 200)
       }
@@ -73,9 +73,9 @@ module.exports = ({ config }) => {
     }, function (error, response, body) {
       if (error || response.statusCode !== 200) {
         console.error(error)
-        apiStatus(res, 'An error occured while accessing Magento 2', 500)
+        apiStatus(res, 'Error on Magento 2: DELETE subscriber', response.statusCode)
       } else {
-        apiStatus(res, body.status, 200)
+        apiStatus(res, 'unsubscribed', 200)
       }
     })
 	})

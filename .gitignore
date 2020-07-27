@@ -1,3 +1,6 @@
-.DS_Store
-.vscode
-.idea
+*
+!*/
+!/src/api/extensions/magento2-subscribe/*
+!/.gitignore
+!/LICENSE
+!/README.md
