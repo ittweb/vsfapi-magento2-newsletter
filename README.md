@@ -28,4 +28,4 @@ In addition to the `email` you need also to pass a new request body parameter, n
 
 `vue-storefront-api-url/api/ext/magento2-subscribe/`
 
-You can find the function that calls the api on you `vue-storefront` installation, in the `core/data-resolver/NewsletterService.ts` file, function `subscribe`.
+You can find the function that calls the API endpoint above on your `vue-storefront` installation, in the `core/data-resolver/NewsletterService.ts` file, function `subscribe`.
