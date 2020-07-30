@@ -10,48 +10,22 @@ const request = require('request')
 module.exports = ({ config }) => {
   let m2Api = Router()
   
-  function subscribeUser(email, response) {
+  function newsletterSubscription(email, response, method) {
     request({
       url: config.magento2.api.url + '/V1/newsletter/subscription/' + email,
-      method: 'POST',
+      method,
       json: false
     }, function (error, result, body) {
       if (error || result.statusCode !== 200) {
         console.error(error, body)
-        apiStatus(response, 'Error on Magento 2: POST subscriber', result.statusCode)
+        apiStatus(response, 'Error on Magento 2: ' + method, result.statusCode)
       } else {
         apiStatus(response, body.status, 200)
       }
     })
   }
 
-  /**
-   * GET user subscription
-   */
-  m2Api.get('/subscribe', (req, res) => {
-    const userEmail = req.query.email
-		if(!userEmail) {
-			apiStatus(res, 'Email not provided!', 500)
-			return
-		}
-    return request({
-      url: config.magento2.api.url + '/V1/newsletter/subscription/' + userEmail,
-      method: 'GET',
-      json: false
-    }, (error, response, body) => {
-      if (error || response.statusCode !== 200) {
-        console.error(error, body)
-        apiStatus(res, '', response.statusCode)
-      } else {
-        apiStatus(res, 'subscribed', 200)
-      }
-    })
-  })
-
-	/**
-	 * POST subscribe a user
-	 */
-	m2Api.post('/subscribe', (req, res) => {
+  function reCaptchaCheck(methodType, req, res) {
     const userEmail = req.body.email
     if(!userEmail) {
       apiStatus(res, 'Email not provided!', 500)
@@ -65,7 +39,7 @@ module.exports = ({ config }) => {
         return
       }
 
-      const recaptchaSecretKey = config.googleRecaptcha.secretKey
+      const recaptchaSecretKey = config.googleRecaptcha?.secretKey
       if(!recaptchaSecretKey) {
         apiStatus(res, 'Google reCaptcha secret key not provided!', 500)
         return
@@ -84,37 +58,51 @@ module.exports = ({ config }) => {
             apiStatus(res, `Error on Google reCaptcha: ${jsonRes['error-codes'][0]}`, 500)
             return
           } else {
-            subscribeUser(userEmail, res)
+            newsletterSubscription(userEmail, res, methodType)
           }
         }
       })
     } else {
-      subscribeUser(userEmail, res)
+      newsletterSubscription(userEmail, res, methodType)
     }
+  }
+
+  /**
+   * GET user subscription
+   */
+  m2Api.get('/subscribe', (req, res) => {
+    const userEmail = req.query.email
+    if(!userEmail) {
+      apiStatus(res, 'Email not provided!', 500)
+      return
+    }
+    return request({
+      url: config.magento2.api.url + '/V1/newsletter/subscription/' + userEmail,
+      method: 'GET',
+      json: false
+    }, (error, response, body) => {
+      if (error || response.statusCode !== 200) {
+        console.error(error, body)
+        apiStatus(res, '', response.statusCode)
+      } else {
+        apiStatus(res, 'subscribed', 200)
+      }
+    })
+  })
+
+  /**
+   * POST subscribe a user
+   */
+  m2Api.post('/subscribe', (req, res) => {
+    reCaptchaCheck('POST', req, res)
   })
   
   /**
-	 * DELETE subscribe a user
-	 */
-	m2Api.delete('/subscribe', (req, res) => {
-		const userEmail = req.body.email
-		if(!userEmail) {
-			apiStatus(res, 'Email not provided!', 500)
-			return
-		}
-    request({
-      url: config.magento2.api.url + '/V1/newsletter/subscription/' + userEmail,
-      method: 'DELETE',
-      json: false
-    }, function (error, response, body) {
-      if (error || response.statusCode !== 200) {
-        console.error(error, body)
-        apiStatus(res, 'Error on Magento 2: DELETE subscriber', response.statusCode)
-      } else {
-        apiStatus(res, 'unsubscribed', 200)
-      }
-    })
-	})
+   * DELETE subscribe a user
+   */
+  m2Api.delete('/subscribe', (req, res) => {
+    reCaptchaCheck('DELETE', req, res)
+  })
 
   return m2Api
 }
