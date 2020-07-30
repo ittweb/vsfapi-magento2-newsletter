@@ -23,7 +23,8 @@ To do so, edit your vue-storefront-api/config/local.json adding a new section li
 ```
 
 ### IMPORTANT
-If you **enable the Google reCaptcha you MUST add**, in addition to the `email` parameter, a **new** request body **parameter**, named `token`, to the POST and DELETE endpoint:
+If you **enable the Google reCaptcha you need to add** a new request body **parameter** named `token`.
+The `token` parameter **MUST contain the grecaptcha.getResponse()** from the Google reCaptcha and is needed in addition to the `email` parameter to the POST and DELETE endpoint:
 
 `vue-storefront-api-url/api/ext/magento2-subscribe/`
 
