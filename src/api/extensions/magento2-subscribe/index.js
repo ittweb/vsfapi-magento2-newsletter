@@ -9,13 +9,13 @@ const request = require('request')
 
 module.exports = ({ config }) => {
   let m2Api = Router()
-  
-  function newsletterSubscription(email, response, method) {
+
+  const newsletterSubscription = (email, response, method) => {
     request({
       url: config.magento2.api.url + '/V1/newsletter/subscription/' + email,
       method,
       json: false
-    }, function (error, result, body) {
+    }, (error, result, body) => {
       if (error || result.statusCode !== 200) {
         console.error(error, body)
         apiStatus(response, 'Error on Magento 2: ' + method, result.statusCode)
@@ -25,46 +25,41 @@ module.exports = ({ config }) => {
     })
   }
 
-  function reCaptchaCheck(methodType, req, res) {
+  const reCaptchaCheck = (methodType, req, res) => {
     const userEmail = req.body.email
-    if(!userEmail) {
-      apiStatus(res, 'Email not provided!', 500)
-      return
+    if (!userEmail) {
+      return apiStatus(res, 'Email not provided!', 500)
     }
 
-    if (config?.googleRecaptcha?.enabled) {  
-      const recaptchaToken = req.body.token
-      if(!recaptchaToken) {
-        apiStatus(res, 'Google reCaptcha token not provided!', 500)
-        return
-      }
-
-      const recaptchaSecretKey = config.googleRecaptcha?.secretKey
-      if(!recaptchaSecretKey) {
-        apiStatus(res, 'Google reCaptcha secret key not provided!', 500)
-        return
-      }
-
-      request({
-        'method': 'POST',
-        'url': `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`
-      }, (error, response) => {
-        if (error) {
-          apiStatus(res, error, 500)
-          return
-        } else {
-          const jsonRes = JSON.parse(response.body);
-          if (jsonRes.success === false) {
-            apiStatus(res, `Error on Google reCaptcha: ${jsonRes['error-codes'][0]}`, 500)
-            return
-          } else {
-            newsletterSubscription(userEmail, res, methodType)
-          }
+    if (config.googleRecaptcha) {
+      if (config.googleRecaptcha.enabled === true) {
+        const recaptchaToken = req.body.token
+        if (!recaptchaToken) {
+          return apiStatus(res, 'Google reCaptcha token not provided!', 500)
         }
-      })
-    } else {
-      newsletterSubscription(userEmail, res, methodType)
+  
+        const recaptchaSecretKey = config.googleRecaptcha.secretKey
+        if (!recaptchaSecretKey) {
+          return apiStatus(res, 'Google reCaptcha secret key not provided!', 500)
+        }
+  
+        request({
+          'method': 'POST',
+          'url': `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`
+        }, (error, response) => {
+          if (error) {
+            return apiStatus(res, error, 500)
+          } else {
+            const jsonRes = JSON.parse(response.body);
+            if (jsonRes.success === false) {
+              return apiStatus(res, `Error on Google reCaptcha: ${jsonRes['error-codes'][0]}`, 500)
+            }
+          }
+        })
+      }
     }
+    
+    newsletterSubscription(userEmail, res, methodType)
   }
 
   /**
@@ -72,9 +67,8 @@ module.exports = ({ config }) => {
    */
   m2Api.get('/subscribe', (req, res) => {
     const userEmail = req.query.email
-    if(!userEmail) {
-      apiStatus(res, 'Email not provided!', 500)
-      return
+    if (!userEmail) {
+      return apiStatus(res, 'Email not provided!', 500)
     }
     return request({
       url: config.magento2.api.url + '/V1/newsletter/subscription/' + userEmail,
@@ -96,7 +90,7 @@ module.exports = ({ config }) => {
   m2Api.post('/subscribe', (req, res) => {
     reCaptchaCheck('POST', req, res)
   })
-  
+
   /**
    * DELETE subscribe a user
    */
