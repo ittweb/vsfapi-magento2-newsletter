@@ -11,7 +11,7 @@ module.exports = ({ config }) => {
   let m2Api = Router()
 
   const newsletterSubscription = (email, response, method) => {
-    request({
+    return request({
       url: config.magento2.api.url + '/V1/newsletter/subscription/' + email,
       method,
       json: false
@@ -50,7 +50,7 @@ module.exports = ({ config }) => {
           if (error) {
             return apiStatus(res, error, 500)
           } else {
-            const jsonRes = JSON.parse(response.body);
+            const jsonRes = JSON.parse(response.body)
             if (jsonRes.success === false) {
               return apiStatus(res, `Error on Google reCaptcha: ${jsonRes['error-codes'][0]}`, 500)
             }
@@ -59,7 +59,7 @@ module.exports = ({ config }) => {
       }
     }
     
-    newsletterSubscription(userEmail, res, methodType)
+    return newsletterSubscription(userEmail, res, methodType)
   }
 
   /**
@@ -88,14 +88,14 @@ module.exports = ({ config }) => {
    * POST subscribe a user
    */
   m2Api.post('/subscribe', (req, res) => {
-    reCaptchaCheck('POST', req, res)
+    return reCaptchaCheck('POST', req, res)
   })
 
   /**
    * DELETE subscribe a user
    */
   m2Api.delete('/subscribe', (req, res) => {
-    reCaptchaCheck('DELETE', req, res)
+    return reCaptchaCheck('DELETE', req, res)
   })
 
   return m2Api
